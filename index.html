@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WEBカメラの映像を表示</title>
+    <style>
+      body {
+        background: linear-gradient(-20deg, #d558c8 0%, #24d292 100%);
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      #video-container {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 70vh;
+        margin-bottom: 20px;
+      }
+
+      #overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0.5;
+      }
+
+      #file-input {
+        margin-bottom: 10px;
+      }
+
+      #opacity-slider {
+        width: 100%;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>WEBカメラの映像を表示</h1>
+      <div id="video-container">
+        <video id="video"></video>
+        <img id="overlay" src="" />
+      </div>
+    </div>
+    <input type="file" id="file-input" accept="image/*" />
+    <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="0.5" />
+
+    <script>
+      const video = document.getElementById('video');
+      const overlay = document.getElementById('overlay');
+      const opacitySlider = document.getElementById('opacity-slider');
+      let currentScale = 1.0;
+
+      navigator.mediaDevices
+        .getUserMedia({
+          video: true,
+          audio: false,
+        })
+        .then((stream) => {
+          video.srcObject = stream;
+          video.play();
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+
+      // 画像アップロード時に実行する関数
+      function handleFileSelect(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          overlay.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // 透明度スライダーのイベントリスナーを設定
+      opacitySlider.addEventListener('input', function () {
+        overlay.style.opacity = opacitySlider.value;
+      });
+
+      // マウスホイールイベントの処理
+      function handleMouseWheel(event) {
+        const delta = Math.sign(event.deltaY);
+        const scaleFactor = 0.1;
+        if (delta > 0) {
+          currentScale -= scaleFactor;
+        } else if (delta < 0) {
+          currentScale += scaleFactor;
+        }
+        overlay.style.transform = `scale(${currentScale})`;
+      }
+
+      // DOMContentLoaded event to ensure the DOM elements are loaded before adding the event listener
+      document.addEventListener('DOMContentLoaded', function () {
+        // ファイル選択のイベントリスナーを設定
+        document.getElementById('file-input').addEventListener('change', handleFileSelect, false);
+
+        // マウスホイールイベントのイベントリスナーを設定
+        overlay.addEventListener('wheel', handleMouseWheel);
+      });
+    </script>
+  </body>
+</html>
